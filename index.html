@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <link rel="stylesheet" href="/main.af46ece4.css">
+<script src="/main.af46ece4.js"></script></head>
+<body>
+<!--  <video id="videoBG" poster="assets/static_bg.png" autoplay muted loop>-->
+<!--    <source src="assets/1.mp4" type="video/mp4">-->
+<!--  </video>-->
+  <div class="bg">
+    <img class="bg__image" src="/bg.8616d336.jpg" alt="">
+  </div>
+  <h1 class="site-title">alevoro.</h1>
+  <h2 class="page-title">Profile</h2>
+  <!--  LOGIN  -->
+  <div class="login-container">
+      <p class="my-account"></p>
+      <p class="my-karma"></p>
+      <p class="btn login">Sign In</p>
+  </div>
+  <div class="navigator-container">
+    <b class="btn navigator market-btn">Market</b><b class="navigator">|</b>
+    <b class="btn navigator mint-btn">Mint</b><b class="navigator">|</b>
+    <b class="btn navigator mynfts-btn">My NFTs</b><b class="navigator">|</b>
+    <b class="btn navigator myloans-btn">My loans</b>
+  </div>
+
+  <div class="gallery"></div>
+  <div class="alert">Please, sign in</div>
+
+  <!--  MODALS  -->
+  <div id="mintModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span class="close closeMint">&times;</span>
+        <h2>Mint NFT</h2>
+      </div>
+        <p>Title: <input class="modal-input mint-title" name="title"></p>
+        <p>URL: <input class="modal-input mint-url" name="url"></p>
+        <button class="btn mint">Mint</button>
+    </div>
+  </div>
+  <div id="nftModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span class="close closeNFT">&times;</span>
+        <h2 class="title-modal-nft"></h2>
+      </div>
+      <div id="modal-borrow-block">
+        <p>Customize the parameters and put your NFT asset up as collateral for a loan</p>
+        <p>Amount(NEAR): <input class="modal-input input-amount" type="number" value="100" name="amount" min="1" max="100000"></p>
+        <p>Time(sec): <input class="modal-input input-duration" type="number" name="duration" value="60" min="30" max="10000000"></p>
+        <p>APR: <input class="modal-input input-apr" type="number" name="apr" value="30" min="1" max="10000"></p>
+      </div>
+      <div id="modal-back-block">
+        <p>Amount(NEAR): <b class="amount">-</b></p>
+        <p>Time(sec): <b class="duration">-</b></p>
+        <p>APR: <b class="apr">-</b></p>
+        <div class="confirmed">
+          <p>Creditor: <b class="creditor">-</b></p>
+          <p>Time left(sec): <b class="time-left">-</b></p>
+        </div>
+      </div>
+      <button class="btn modal-main-btn"></button>
+    </div>
+  </div>
+
+  <script src="/main.1f19ae8e.js"></script>
+</body>
+</html>
