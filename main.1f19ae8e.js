@@ -22249,16 +22249,16 @@ function _connect() {
 function updateUI() {
   console.log("update UI");
   document.querySelector('.' + navigatorState.toLowerCase() + '-btn').style.textDecoration = "underline";
+  document.querySelector('.gallery-alert').style.display = 'block';
+  document.querySelector('.alert').innerHTML = "";
 
   if (!window.walletConnection.getAccountId()) {
-    document.querySelector('.alert').style.display = 'block';
-    document.querySelector('.login').innerHTML = "Please, sign in";
+    document.querySelector('.alert').innerHTML = "Please, sign in";
     document.querySelector('.my-account').style.display = 'none';
     document.querySelector('.my-karma').style.display = 'none';
     document.querySelector('.login').innerHTML = "sign in";
     document.querySelector(".gallery").innerHTML = "";
   } else {
-    document.querySelector('.alert').style.display = 'none';
     var myAcc = document.querySelector('.my-account');
     var myKarma = document.querySelector('.my-karma');
     myAcc.style.display = 'block';
@@ -22288,6 +22288,9 @@ function updateUI() {
     }).then(function (res) {
       initNFTs(res, true, "MyLoans");
     });
+    setTimeout(function () {
+      document.querySelector('.alert').innerHTML = getAlertPhrase();
+    }, 700);
   }
 }
 
@@ -22296,6 +22299,10 @@ function initNFTs(res, isLocked, PAGE) {
   addLoadedNfts(nfts, PAGE);
 
   if (navigatorState === PAGE) {
+    if (nfts.length > 0) {
+      document.querySelector('.gallery-alert').style.display = 'none';
+    }
+
     showGallery(nfts, PAGE);
   }
 }
@@ -22321,6 +22328,22 @@ function addLoadedNfts(nfts, curPage) {
   } finally {
     _iterator.f();
   }
+}
+
+function getAlertPhrase() {
+  if (navigatorState === 'Market') {
+    return 'Market is empty';
+  }
+
+  if (navigatorState === 'MyNFTs') {
+    return "You don't have any NFTs";
+  }
+
+  if (navigatorState === 'MyLoans') {
+    return "You don't have any debtors";
+  }
+
+  return "";
 }
 
 function showGallery(nfts, nftState) {
@@ -22364,21 +22387,29 @@ function showModalNft(id, nftState) {
       document.querySelector('.modal-main-btn').innerHTML = "Repaid loan";
       document.querySelector('.creditor').innerHTML = nft.creditor;
       var curTime = Math.round(new Date().getTime() / 1000);
-      console.log(curTime - Number.parseInt(nft.start_time.toString().slice(0, 10)));
       var timeLeft = Number.parseInt(nft.duration) - (curTime - Number.parseInt(nft.start_time.toString().slice(0, 10)));
-      document.querySelector('.time-left').innerHTML = timeLeft > 0 ? timeLeft : "Time is over";
-      console.log(nft.borrowed_money, nft.apr);
       var multiplier = 1 + Number.parseInt(nft.apr) / 100;
-      console.log(multiplier);
       deposit = parseNearAmount((Number.parseFloat(formatNearAmount(nft.borrowed_money)) * multiplier).toString());
-      console.log(deposit);
 
       if (nftState === 'MyLoans') {
         document.querySelector('.title-modal-nft').innerHTML = "Debtor";
 
         if (timeLeft > 0) {
+          showTimer(timeLeft, function () {
+            if (navigatorState === 'MyLoans') {
+              document.querySelector('.modal-main-btn').style.display = 'inline';
+              document.querySelector('.modal-main-btn').innerHTML = "Claim NFT";
+              $('.modal-main-btn').off('click').click(function () {
+                document.querySelector('.modal-main-btn').style.display = 'none';
+                contract.check_transfer_overdue_nft_to_creditor({
+                  token_id: id
+                }).then(goToNFTsAndUpdate);
+              });
+            }
+          });
           document.querySelector('.modal-main-btn').style.display = 'none';
         } else {
+          showTimer(timeLeft, function () {});
           document.querySelector('.modal-main-btn').innerHTML = "Claim NFT";
           $('.modal-main-btn').off('click').click(function () {
             document.querySelector('.modal-main-btn').style.display = 'none';
@@ -22389,6 +22420,12 @@ function showModalNft(id, nftState) {
         }
       } else {
         document.querySelector('.title-modal-nft').innerHTML = "Repay";
+        showTimer(timeLeft, function () {
+          if (navigatorState === 'MyNFTs') {
+            document.querySelector('.modal-main-btn').style.display = 'none';
+            document.querySelector('.title-modal-nft').innerHTML = "Lost NFT";
+          }
+        });
         $('.modal-main-btn').off('click').click(function () {
           contract.repaid_loan({
             token_id: id
@@ -22446,6 +22483,35 @@ function showModalNft(id, nftState) {
   }
 }
 
+function showTimer(secondsLeft, callback) {
+  calculate();
+  var timer = setInterval(calculate, 1000);
+
+  function calculate() {
+    function formatNumber(num) {
+      if (num / 10 < 1) {
+        return '0' + num;
+      }
+
+      return num;
+    }
+
+    if (secondsLeft <= 0) {
+      clearInterval(timer);
+      document.querySelector('.timer').innerHTML = 'Time is over';
+      callback();
+      return;
+    }
+
+    var seconds = formatNumber(secondsLeft % 60);
+    var minutes = formatNumber(Math.floor(secondsLeft / 60) % 60);
+    var hours = formatNumber(Math.floor(secondsLeft / (60 * 60)) % 60);
+    var days = Math.floor(secondsLeft / (60 * 60 * 24)) % 60;
+    document.querySelector('.timer').innerHTML = "".concat(days, " days, ").concat(hours, ":").concat(minutes, ":").concat(seconds);
+    secondsLeft -= 1;
+  }
+}
+
 function changeNavigatorState(newState) {
   if (navigatorState !== newState) {
     document.querySelector('.' + navigatorState.toLowerCase() + '-btn').style.textDecoration = "none";
@@ -22467,6 +22533,9 @@ function getMetadata(title, media) {
   };
 }
 
+document.querySelector('.mint-url').addEventListener("input", function (e) {
+  document.querySelector('.container-mint-image').innerHTML = "   <div class=\"mint-image\"><img class=\"container_image\" src=\"" + e.target.value + "\"\></div>\n";
+});
 var modalMint = document.getElementById("mintModal");
 var modalNFT = document.getElementById("nftModal");
 document.querySelector('.closeMint').addEventListener("click", function () {
@@ -22475,7 +22544,7 @@ document.querySelector('.closeMint').addEventListener("click", function () {
 document.querySelector('.closeNFT').addEventListener("click", function () {
   modalNFT.style.display = "none";
 });
-document.querySelector('.mint').addEventListener("click", function () {
+document.querySelector('.modal-mint-btn').addEventListener("click", function () {
   console.log("try mint");
   var title = document.getElementsByClassName("mint-title")[0].value;
   var url = document.getElementsByClassName("mint-url")[0].value;
@@ -22493,6 +22562,9 @@ document.querySelector('.mint').addEventListener("click", function () {
   }
 });
 document.querySelector('.mint-btn').addEventListener("click", function () {
+  document.querySelector('.container-mint-image').innerHTML = "";
+  document.querySelector('.mint-url').value = '';
+  document.querySelector('.mint-title').value = '';
   modalMint.style.display = "block";
 });
 document.querySelector('.market-btn').addEventListener("click", function () {
@@ -22542,7 +22614,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58911" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "57933" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
